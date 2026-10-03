@@ -13,5 +13,5 @@ This repository contains a Markov Chain Monte Carlo pipeline to constrain certai
 
 This repository contains:
 1. `mcmc.py` which the data was analyzed
-2. `Hz_dat.csv` which is the dataset with the $H(z)$ values used in this project
+2. `Hz_data.csv` which is the dataset with the $H(z)$ values used in this project
 3. `README.md` which is the file you're reading right now!
