@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-"""analysis.py -- builds the covariance matrices and runs the four emcee fits.
-Saves what plotting.py needs to the outputs/ folder."""
-
 import os
 import numpy as np
 import pandas as pd
@@ -221,7 +218,6 @@ for cov_name, cov in covariances.items():
 #splined w/ priors 70.84953052016323 0.3111839597695859 1.0959922297720401 0.011684511656368787
 #splined w/out priors 71.93902970395156 0.2923182952761659 4.179533037317258 0.05893025159031765
 
-# save everything plotting.py needs
 data_sorted.to_csv("outputs/data_sorted.csv", index=False)
 np.save("outputs/covar_sorted.npy", covar_sorted)
 np.save("outputs/fcovar.npy", fcovar)
