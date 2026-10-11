@@ -1,21 +1,19 @@
-# -*- coding: utf-8 -*-
-import os
+#This better be analysis.py
+
 import numpy as np
 import pandas as pd
 import emcee
-
-os.makedirs("outputs", exist_ok=True)
-
+ 
 def model(z,H0,Om):
     if (np.any(z<0) or np.any(H0 < 0) or np.any(not(0<Om<1))):
         return None
     return H0 * (Om * (1 + z)**3 + (1 - Om))**0.5
-
+ 
 class Likelihood:
-
+ 
     def __init__(self, z, data, covar, p_names, get_theory=model, bounds = None, prior=None):
         self.z = np.asarray(z)
-
+ 
         self.dv = data
         self.cv = covar
         self.get_theory = get_theory
@@ -27,58 +25,58 @@ class Likelihood:
           for name, inf in (prior).items():
             self.prior_mean[name]=np.mean(inf["value"])
             self.prior_stdev[name]=np.mean(inf["stdev"])
-
+ 
     def lnprior(self, pars):
       for i, name in enumerate(self.pnames):
         min, max = self.bounds.get(name,(-np.inf,np.inf))
         if not(min<pars[i]<max):
           return -np.inf
-
+ 
       lnp = 0
       for i, name in enumerate(self.pnames):
         if name in self.prior_mean:
           mean=self.prior_mean[name]
           std = self.prior_stdev[name]
           lnp+= -np.log(std)-0.5*np.log(2*np.pi)-0.5*((pars[i]-mean)/std)**2
-
+ 
       return lnp
-
+ 
     def lnlike(self, pars):
         tv = self.get_theory(self.z, *pars)
         if tv is None:
             return -np.inf
         dx = np.array(self.dv - tv)
-
+ 
         ic = np.linalg.inv(self.cv)
         chi2 = dx.T @ ic @ dx
         return -0.5 * chi2
-
+ 
     def lnprob(self, pars):
         prob = self.lnprior(pars)
         if prob > -np.inf:
             prob += self.lnlike(pars)
         return prob
-
+ 
 priors = { "H0": {"value": [73.04, 74.03, 67.4, 73.52, 73.24, 67.8, 67.3],
            "stdev":  [1.04, 1.42, 0.5, 1.62, 1.74, 0.9, 1.2]},
     "Om": {"value": [0.298, 0.315, 0.334, 0.352, 0.295, 0.2962, 0.307, 0.3056],
            "stdev":  [0.022, 0.007, 0.018, 0.017, 0.015, 0.0095, 0.005, 0.0049]},
            }
 bounds = {"H0": (0,np.inf), "Om":(0,1)}
-
+ 
 # Direct download link for the Google Drive file
 url = 'https://drive.google.com/uc?export=download&id=1D6_oQT5WdqP3kZ4WHs_Xv5xejjLQ0iAl'
-
+ 
 # Read the data directly from the URL
 data = pd.read_csv(url, sep=',', comment='#', header=None, names=['z', 'Hz', 'stdev','sample','reference','cov','note'])
-
+ 
 z = data['z']
 Hz = data['Hz']
 stdev = data['stdev']
-
-
+ 
+ 
 print(data.head())
-
+ 
 covar = np.array([
     [64.005920137, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000],
     [0.000000000, 30.979802926, 16.498120450, 0.000000000, 0.000000000, 0.000000000, 18.219242407, 18.547003906, 0.000000000, 18.205850403, 21.966737683, 22.790649187, 0.000000000, 19.446449715, 0.000000000, 25.959467648, 21.117548136, 21.513691717, 0.000000000, 14.362456919, 0.000000000, 0.000000000, 21.268648999, 0.000000000, 0.000000000, 15.253387544, 0.000000000, 0.000000000, 0.000000000, 17.784720195, 0.000000000, 0.000000000, 0.000000000],
@@ -114,27 +112,27 @@ covar = np.array([
     [0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 204.886988900, 317.721700000, 250.817899900],
     [0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 0.000000000, 185.620735100, 250.817899900, 328.811300000],
 ])
-
+ 
 # covar matrix from squared errors on diagonal in addition with Loubser and Moresco's covariances as the off-diagonal elements.
-
+ 
 data_sorted = data.sort_values(by='z').reset_index(drop=False)
-
+ 
 new_index_order = data_sorted['index'].values
-
+ 
 covar_sorted = covar[new_index_order][:, new_index_order]
 fcovar = covar_sorted.copy()
-
+ 
 z_sorted = data_sorted['z'].values
 Hz_sorted = data_sorted['Hz'].values
 diag = np.diag(covar_sorted)
 sd = np.sqrt(diag)
-
+ 
 print("Data sorted by z. Covariance matrix reordered.")
 print(data_sorted.head())
-
+ 
 import numpy as np
 from scipy.interpolate import RectBivariateSpline
-
+ 
 moresco_covar=np.array([
 [30.979802926, 16.498120450, 18.219242407, 18.547003906, 18.205850403, 21.966737683, 22.790649187, 19.446449715, 25.959467648, 21.117548136, 21.513691717, 14.362456919, 21.268648999, 15.253387544, 17.784720195],
 [16.498120450, 40.520457389, 18.231403161, 18.559383430, 18.218002219, 21.981399769, 22.805861208, 19.459429590, 25.976794752, 21.131643416, 21.528051410, 14.372043394, 21.282845133, 15.263568686, 17.796590920],
@@ -153,44 +151,44 @@ moresco_covar=np.array([
 [17.784720195, 17.796590920, 19.653172310, 20.006770790, 19.638911079, 23.696020044, 24.584745259, 20.977344550, 28.003905923, 22.779726479, 23.206816642, 15.490920490, 22.943024447, 16.454014720, 2477.360897800]
 ])
 moresco_z = np.array([0.1791, 0.1993, 0.3519, 0.3802, 0.4004, 0.4247, 0.4497, 0.4783, 0.5929, 0.6797, 0.7812, 0.8754, 1.0370, 1.3630, 1.9650])
-
+ 
 loubser_covar = np.array([
     [152.107300000, 204.886988900, 185.620735100],
     [204.886988900, 317.721700000, 250.817899900],
     [185.620735100, 250.817899900, 328.811300000]
 ])
 loubser_z = np.array([0.46, 0.67, 0.83])
-
+ 
 moresco_i=np.array([np.where(z_sorted==x)[0][0] for x in moresco_z])
 loubser_i=np.array([np.where(z_sorted==x)[0][0] for x in loubser_z])
-
+ 
 sd_moresco = np.sqrt(np.diag(moresco_covar))
 sd_loubser = np.sqrt(np.diag(loubser_covar))
-
+ 
 corr_moresco = moresco_covar/(np.outer(sd_moresco,sd_moresco))
 corr_loubser = loubser_covar/(np.outer(sd_loubser,sd_loubser))
-
+ 
 spline_m = RectBivariateSpline(moresco_z, moresco_z, corr_moresco, kx=1, ky=1)
 spline_l = RectBivariateSpline(loubser_z, loubser_z, corr_loubser, kx=1, ky=1)
-
+ 
 corr = (spline_m(z_sorted, z_sorted)+spline_l(z_sorted,z_sorted))/2
 scovar = corr*np.outer(sd,sd)
-
+ 
 for i in range(0,33):
   for j in range (0,33):
     if not((i in moresco_i and j in moresco_i) or (i in loubser_i and j in loubser_i)):
       fcovar[i,j]=scovar[i,j]
-
+ 
 fcovar[np.ix_(moresco_i,moresco_i)] = moresco_covar
 fcovar[np.ix_(loubser_i,loubser_i)] = loubser_covar
 np.fill_diagonal(fcovar, diag)
-
+ 
 covariances = {"normal": covar_sorted, "splined": fcovar}
 prior_settings = {" w/ priors": priors, " w/out priors": None}
-
+ 
 results = {}
 chains = {}
-
+ 
 for cov_name, cov in covariances.items():
     for prior_name, pr in prior_settings.items():
       np.random.seed(42)
@@ -199,30 +197,21 @@ for cov_name, cov in covariances.items():
       nwalkers = 32
       p_guess = np.array([70,0.31])
       p = p_guess + 0.0001*(np.random.randn(nwalkers, ndim))
-
+ 
       sampler = emcee.EnsembleSampler(nwalkers, ndim, like.lnprob)
       sampler.run_mcmc(p, 5000,)
-
+ 
       flat = sampler.get_chain(discard = 250, thin = 2, flat = True)
-
+ 
       h0, om = np.mean(flat, axis = 0)
       h0stdev, omstdev = np.std(flat, axis = 0)
-
+ 
       key = f"{cov_name}{prior_name}"
       chains[key] = flat
       results[key] = (h0,om,h0stdev,omstdev)
       print(key, h0, om, h0stdev, omstdev)
-
+ 
 #normal w/ priors 70.49842588440873 0.3115529832251831 1.0716748687947346 0.01161094397547705
 #normal w/out priors 66.5485271779976 0.3600916677689409 4.191665610972808 0.07089966860028353
 #splined w/ priors 70.84953052016323 0.3111839597695859 1.0959922297720401 0.011684511656368787
 #splined w/out priors 71.93902970395156 0.2923182952761659 4.179533037317258 0.05893025159031765
-
-data_sorted.to_csv("outputs/data_sorted.csv", index=False)
-np.save("outputs/covar_sorted.npy", covar_sorted)
-np.save("outputs/fcovar.npy", fcovar)
-
-np.save("outputs/normal_w_priors.npy", chains["normal w/ priors"])
-np.save("outputs/normal_wout_priors.npy", chains["normal w/out priors"])
-np.save("outputs/splined_w_priors.npy", chains["splined w/ priors"])
-np.save("outputs/splined_wout_priors.npy", chains["splined w/out priors"])
